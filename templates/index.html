@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Predicción de Tumores IA</title>
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f4f4f4;
+            text-align: center;
+        }
+        .container {
+            max-width: 800px;
+            margin: 40px auto;
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.1);
+        }
+        h1 {
+            color: #333;
+        }
+        input[type="file"] {
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            background-color: #fff;
+        }
+        button {
+            background-color: #28a745;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+        button:hover {
+            background-color: #218838;
+        }
+        .image-container {
+            display: flex;
+            justify-content: center;
+            flex-wrap: wrap;
+            gap: 20px;
+            margin-top: 20px;
+        }
+        .image-box {
+            border: 1px solid #ddd;
+            padding: 10px;
+            border-radius: 5px;
+            background: #fff;
+            box-shadow: 0px 2px 5px rgba(0, 0, 0, 0.1);
+        }
+        .image-box img {
+            max-width: 100%;
+            height: auto;
+            border-radius: 5px;
+        }
+        .result {
+            margin-top: 20px;
+            padding: 15px;
+            background-color: #e9ecef;
+            border-radius: 5px;
+            font-weight: bold;
+        }
+        #loading-container {
+            width: 100%;
+            height: 6px;
+            background-color: #ddd;
+            position: relative;
+            display: none;
+            border-radius: 3px;
+            overflow: hidden;
+            margin-top: 10px;
+        }
+        #loading-bar {
+            width: 0;
+            height: 100%;
+            background-color: #4caf50;
+            transition: width 0.4s ease-in-out;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Predicción de Tumor en Imagen MRI</h1>
+        <form action="/predict" method="POST" enctype="multipart/form-data" id="predict-form">
+            <label for="image">Selecciona una imagen:</label>
+            <input type="file" name="image" id="image" required>
+            <button type="submit">Predecir</button>
+        </form>
+        <div id="loading-container">
+            <div id="loading-bar"></div>
+        </div>
+
+        {% if result %}
+            <div class="result">
+                <h2>Resultado: {{ result }}</h2>
+                <p>Probabilidad de tumor: {{ "%.2f"|format(probability * 100) }}%</p>
+            </div>
+            <div class="image-container">
+                {% if original_image %}
+                    <div class="image-box">
+                        <h3>Imagen Original</h3>
+                        <img src="{{ original_image }}" alt="Imagen Original">
+                    </div>
+                {% endif %}
+                {% if mask %}
+                    <div class="image-box">
+                        <h3>Máscara de Segmentación</h3>
+                        <img src="{{ mask }}" alt="Máscara de Segmentación">
+                    </div>
+                {% endif %}
+                {% if overlay_image %}
+                    <div class="image-box">
+                        <h3>Tumor Destacado</h3>
+                        <img src="{{ overlay_image }}" alt="Imagen con Tumor Destacado">
+                    </div>
+                {% endif %}
+            </div>
+        {% endif %}
+        {% if error %}
+            <div class="result" style="background-color: #f8d7da; color: #721c24;">
+                <h3>Error: {{ error }}</h3>
+            </div>
+        {% endif %}
+    </div>
+
+    <script>
+        document.getElementById('predict-form').addEventListener('submit', function(event) {
+            event.preventDefault();
+            const loadingContainer = document.getElementById('loading-container');
+            const loadingBar = document.getElementById('loading-bar');
+            loadingContainer.style.display = 'block';
+            loadingBar.style.width = '0%';
+            let width = 0;
+            let interval = setInterval(function() {
+                if (width >= 100) {
+                    clearInterval(interval);
+                } else {
+                    width += 5;
+                    loadingBar.style.width = width + '%';
+                }
+            }, 100);
+            setTimeout(() => {
+                document.getElementById('predict-form').submit();
+            }, 1200);
+        });
+    </script>
+</body>
+</html>
